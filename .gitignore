@@ -5,6 +5,7 @@
 
 .replit
 replit.*
+.vscode/
 
 # User-specific files
 *.rsuser
