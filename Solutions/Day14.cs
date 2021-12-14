@@ -8,10 +8,10 @@ namespace Solutions
     public class Day14 : Solution
     {
         private string _initialPattern;
-        private readonly Dictionary<string, char> _insertions;
+        private readonly Dictionary<string, Tuple<string, string>> _insertions;
         private Day14() : base(14)
         {
-            _insertions = new Dictionary<string, char>();
+            _insertions = new Dictionary<string, Tuple<string, string>>();
         }
         public static void Go()
         {
@@ -31,7 +31,7 @@ namespace Solutions
             }
             else
             {
-                _insertions[data[0]] = data[1][0];
+                _insertions[data[0]] = Tuple.Create($"{data[0][0]}{data[1][0]}", $"{data[1][0]}{data[0][1]}");
             }
         }
         protected override bool RunSamples => true;
@@ -43,73 +43,59 @@ namespace Solutions
         protected override bool RunActuals => true;
         protected override ulong SolutionA()
         {
-            return Solve(10);
-        }
-        private ulong Solve(uint maxDepth)
-        {
-            // Initialize our counts dictionary
-            var counts = CreateCountDictionary(_initialPattern, _insertions);
-            for (int i = 0; i < _initialPattern.Length - 1; ++i)
-            {
-                RecursiveInsert(_initialPattern[i], _initialPattern[i + 1], 0, maxDepth, _insertions, counts, true);
-            }
-            counts[_initialPattern[_initialPattern.Length - 1]]++;
-
-            var pairs = counts.Values.OrderBy(v => v).ToList();
-
-            return pairs[pairs.Count - 1] - pairs[0];
+            return SolveFishyStyle(10);
         }
         protected override ulong SolutionB()
         {
-            return Solve(40);
+            return SolveFishyStyle(40);
         }
-        private static Dictionary<char, ulong> CreateCountDictionary(string initialPattern, Dictionary<string, char> insertions)
+
+        private ulong SolveFishyStyle(uint maxDepth)
         {
-            var counts = new Dictionary<char, ulong>();
-            foreach (var c in initialPattern)
+            var counts = new Dictionary<string, ulong>();
+            for (int i = 0; i < _initialPattern.Length - 1; ++i)
             {
-                counts[c] = 0;
+                string pattern = $"{_initialPattern[i]}{_initialPattern[i + 1]}";
+                AddCount(counts, pattern, 1);
             }
-            foreach (var pair in insertions)
+
+            for (uint i = 0; i < maxDepth; ++i)
             {
-                foreach (var c in pair.Key)
-                {
-                    counts[c] = 0;
-                }
-                counts[pair.Value] = 0;
+                counts = UpdateCounts(counts, _insertions);
+            }
+
+            var letterCounts = new Dictionary<char, ulong>();
+            foreach (var pair in counts)
+            {
+                if (!letterCounts.ContainsKey(pair.Key[0]))
+                    letterCounts[pair.Key[0]] = 0;
+                letterCounts[pair.Key[0]] += pair.Value;
+                if (!letterCounts.ContainsKey(pair.Key[1]))
+                    letterCounts[pair.Key[1]] = 0;
+                letterCounts[pair.Key[1]] += pair.Value;
+            }
+
+            var values = letterCounts.Values.Select(v => (v + 1) / 2).OrderBy(v => v).ToList();
+
+            return values[values.Count - 1] - values[0];
+        }
+        private static void AddCount(Dictionary<string, ulong> counts, string pattern, ulong amount)
+        {
+            if (!counts.ContainsKey(pattern))
+                counts[pattern] = 0;
+
+            counts[pattern] += amount;
+        }
+        private static Dictionary<string, ulong> UpdateCounts(Dictionary<string, ulong> initial, Dictionary<string, Tuple<string, string>> _insertions)
+        {
+            var counts = new Dictionary<string, ulong>();
+            foreach (var pair in initial)
+            {
+                var tuple = _insertions[pair.Key];
+                AddCount(counts, tuple.Item1, pair.Value);
+                AddCount(counts, tuple.Item2, pair.Value);
             }
             return counts;
         }
-        private static void RecursiveInsert(char first, char second, uint currentDepth, uint maxDepth, Dictionary<string, char> insertions, Dictionary<char, ulong> counts, bool countIfAtMaxDepth)
-        {
-            if (currentDepth == maxDepth)
-            {
-                if (countIfAtMaxDepth)
-                {
-                    counts[first]++;
-                    counts[second]++;
-                }
-                return;
-            }
-
-            string pair = $"{first}{second}";
-            if (insertions.TryGetValue(pair, out char insertion))
-            {
-                RecursiveInsert(first, insertion, currentDepth + 1, maxDepth, insertions, counts, true);
-                RecursiveInsert(insertion, second, currentDepth + 1, maxDepth, insertions, counts, false);
-            }
-        }
-        // private static void InsertBetweenPairs(List<char> pattern, Dictionary<string, char> insertions)
-        // {
-        //     for (int i = 0; i < pattern.Count - 1; ++i)
-        //     {
-        //         string pair = $"{pattern[i]}{pattern[i + 1]}";
-        //         if (insertions.TryGetValue(pair, out char insertion))
-        //         {
-        //             pattern.Insert(i + 1, insertion);
-        //             ++i;
-        //         }
-        //     }
-        // }
     }
 }
