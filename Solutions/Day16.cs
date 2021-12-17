@@ -21,7 +21,7 @@ namespace Solutions
         }
         public static ulong BinToUInt(string binary)
         {
-            uint value = 0;
+            ulong value = 0;
             foreach (char c in binary)
             {
                 value <<= 1;
@@ -363,7 +363,7 @@ namespace Solutions
         {
             _input = null;
         }
-        protected override bool RunActuals => false;
+        protected override bool RunActuals => true;
         protected override ulong SolutionA()
         {
             string bits = HexToBits(_input);
