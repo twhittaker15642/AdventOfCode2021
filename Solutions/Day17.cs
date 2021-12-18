@@ -76,7 +76,7 @@ namespace Solutions
         }
         protected override ulong SolutionB()
         {
-            var valid = new List<Tuple<int, int>>();
+            var valid = new Dictionary<int, HashSet<int>>();
 
             // At some point our x range ends its valid values.  These are those extrema.
             double vxMinMax = -0.5 + Math.Sqrt(2 * _xMin + 1);
@@ -113,11 +113,23 @@ namespace Solutions
                     for (int vY = initialVY; vY >= finalVY; --vY)
                     {
                         // Double check vY
-                        valid.Add(Tuple.Create(vX, vY));
+                        if (!valid.TryGetValue(vX, out HashSet<int> y))
+                        {
+                            y = new HashSet<int>();
+                            valid[vX] = y;
+                        }
+
+                        y.Add(vY);
                     }
                 }
             }
-            return (ulong)valid.Count;
+            
+            ulong sum = 0;
+            foreach (var pair in valid)
+            {
+                sum += (ulong) pair.Value.Count;
+            }
+            return sum;
         }
     }
 }

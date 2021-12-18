@@ -6,6 +6,7 @@
 .replit
 replit.*
 .vscode/
+.DS_Store
 
 # User-specific files
 *.rsuser
