@@ -23,6 +23,7 @@ class Program
         //Day14.Go();
         //Day15.Go();
         //Day16.Go();
-        Day17.Go();
+        //Day17.Go();
+        Day18.Go();
     }
 }
