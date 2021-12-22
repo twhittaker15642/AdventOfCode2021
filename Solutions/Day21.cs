@@ -24,11 +24,6 @@ namespace Solutions
         public ulong RollCount { get; private set; }
     }
 
-    public class DiracDie
-    {
-        private uint _value;
-    }
-
     public class Day21 : Solution
     {
         private uint _p1start;
