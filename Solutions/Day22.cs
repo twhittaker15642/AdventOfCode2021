@@ -7,6 +7,7 @@ namespace Solutions
     public class Cuboid
     {
         private readonly List<Cuboid> _subtracted;
+
         public Cuboid(long xmin, long xmax, long ymin, long ymax, long zmin, long zmax, bool turnOn)
         {
             XMin = xmin;
@@ -53,19 +54,21 @@ namespace Solutions
         public bool IsValidStartup { get; }
         public void Subtract(Cuboid other)
         {
+            // Get the dimensions of the subtracted cuboid
+            //  If there are any axes that don't *actually* intersect, there's no true intersection here.  Just exit.
             long xmax = Math.Min(other.XMax, this.XMax);
             long xmin = Math.Max(other.XMin, this.XMin);
-            if (xmax <= xmin)
+            if (xmax < xmin)
                 return;
 
             long ymax = Math.Min(other.YMax, this.YMax);
             long ymin = Math.Max(other.YMin, this.YMin);
-            if (ymax <= ymin)
+            if (ymax < ymin)
                 return;
 
             long zmax = Math.Min(other.ZMax, this.ZMax);
             long zmin = Math.Max(other.ZMin, this.ZMin);
-            if (zmax <= zmin)
+            if (zmax < zmin)
                 return;
 
             // If we have a valid subtraction, subtract it from each of our other cuboids
@@ -73,7 +76,7 @@ namespace Solutions
             {
                 cuboid.Subtract(other);
             }
-            _subtracted.Add(new Cuboid(xmax, xmin, ymax, ymin, zmax, zmin, false));
+            _subtracted.Add(new Cuboid(xmin, xmax, ymin, ymax, zmin, zmax, false));
         }
     }
 
@@ -141,38 +144,42 @@ namespace Solutions
 
             _cuboids.Add(new Cuboid(xmin, xmax, ymin, ymax, zmin, zmax, turnOn));
         }
-        protected override bool RunSamples => true;
+        protected override bool RunSamples => false;
         protected override void ResetAfterSamples()
         {
             _cuboids.Clear();
         }
-        protected override bool RunActuals => false;
+        protected override bool RunActuals => true;
         protected override ulong SolutionA()
         {
-            return CalculateVolume(_cuboids.Where(c => c.IsValidStartup).ToList());
-            //return CountEnabled(_instructions);
+            // TMW 12/22/2021 -- Currently, the use of the same objects in A and B solutions causes problems...
+            //  can only uncomment EITHER solution A OR solution B.
+            return 0;
+            // ulong answer1 = CalculateVolume(_cuboids.Where(c => c.IsValidStartup));
+            // //Console.WriteLine("NEXT");
+            // ulong answer2 = CountEnabled(_cuboids);
+            // return answer1;
         }
         protected override ulong SolutionB()
         {
-            return 0;
-            //return CalculateVolume(_instructions);
+            return CalculateVolume(_cuboids);
         }
 
-        private static ulong CalculateVolume(List<Cuboid> cuboids)
+        private static ulong CalculateVolume(IEnumerable<Cuboid> enumerableCuboids)
         {
+            var cuboids = new List<Cuboid>(enumerableCuboids);
             for (int i = 0; i < cuboids.Count; ++i)
             {
                 var current = cuboids[i];
                 for (int j = 0; j < i; ++j)
                 {
-                    if (current.TurnOn)
-                    {
-                        current.Subtract(cuboids[j]);
-                    }
-                    else
-                    {
-                        cuboids[j].Subtract(current);
-                    }
+                    var other = cuboids[j];
+                    other.Subtract(current);
+                }
+                if (!current.TurnOn)
+                {
+                    cuboids.RemoveAt(i);
+                    --i;
                 }
                 Console.WriteLine(SumVolumes(cuboids.Take(i + 1)));
             }
@@ -185,8 +192,7 @@ namespace Solutions
             ulong total = 0;
             foreach (var cuboid in cuboids)
             {
-                if (cuboid.TurnOn)
-                    total += cuboid.CalculateVolume();
+                total += cuboid.CalculateVolume();
             }
             return total;
         }
@@ -210,6 +216,8 @@ namespace Solutions
                         }
                     }
                 }
+
+                //Console.WriteLine(CountEnabled(grid));
             }
 
             return CountEnabled(grid);
